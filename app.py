@@ -3,6 +3,8 @@ from search.core import SearchEngine
 from config.settings import WEB_CONFIG
 import time
 from pathlib import Path
+from chat.rag import conv_manager, get_rag_response
+import uuid
 
 app = Flask(__name__,
             template_folder=WEB_CONFIG['template_dir'],
@@ -19,6 +21,43 @@ except Exception as e:
 @app.route('/')
 def index():
     return render_template('index.html')
+
+@app.route('/chat')
+def chat_page():
+    return render_template('chat.html')
+
+@app.route('/api/chat', methods=['POST'])
+def chat_api():
+    data = request.get_json()
+    session_id = data.get('session_id', str(uuid.uuid4()))
+    message = data.get('message', '').strip()
+    
+    if not message:
+        return jsonify({'error': 'Message cannot be empty'}), 400
+    
+    try:
+        # Add user message to history
+        conv_manager.add_message(session_id, "user", message)
+        
+        # Get RAG response
+        response = get_rag_response(session_id, message)
+        
+        # Add assistant response to history
+        conv_manager.add_message(session_id, "assistant", response["answer"])
+        
+        return jsonify({
+            'answer': response.get("answer", ""),
+            'session_id': session_id,
+            'documents': response.get("documents", []),
+            'context': [doc.metadata for doc in response.get("context", [])] if response.get("context") else []
+        })
+    except Exception as e:
+        return jsonify({
+            'error': {
+                'message': str(e),
+                'type': type(e).__name__
+            }
+        }), 500
 
 
 @app.route('/search')
