@@ -30,7 +30,7 @@ class Tokenizer:
         text = re.sub(r'[^\w\s\u4e00-\u9fa5]', '', text)
         words = jieba.lcut(text)
         return [word for word in words
-                if word not in self.stopwords['zh'] and len(word) > 1]
+                if word not in self.stopwords['zh'] and len(word) >= 1]
 
     def _tokenize_english(self, text):
         """英文分词"""
@@ -38,7 +38,7 @@ class Tokenizer:
         text = re.sub(r'[^\w\s]', ' ', text)
         words = re.findall(r'\w+', text)
         return [word for word in words
-                if word not in self.stopwords['en'] and len(word) > 2]
+                if word not in self.stopwords['en'] and len(word) >= 1]  #这里改动
 
 
 

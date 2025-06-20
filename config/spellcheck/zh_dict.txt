@@ -7,6 +7,7 @@
 计算机视觉
 算法
 模型
+大模型
 数据
 训练
 推理
@@ -64,6 +65,8 @@ Pandas
 Jupyter
 Notebook
 Python
+LLM
+llm
 编程
 开发
 研究

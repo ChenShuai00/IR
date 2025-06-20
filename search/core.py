@@ -14,8 +14,10 @@ from .synonym_expander import SynonymExpander
 class SearchEngine:
     def __init__(self):
         # 初始化组件
+        self.all_doc_ids = set( [str(i) for i in range(12500)])
         self.spellchecker = SpellChecker()
         self.synonym_expander = SynonymExpander()
+
 
         # 加载索引
         self._load_index()
@@ -46,8 +48,9 @@ class SearchEngine:
 
         # 同义词扩展
         expanded = self.synonym_expander.expand(corrected)
+        # expanded if expanded != corrected else corrected
 
-        return expanded if expanded != corrected else corrected
+        return corrected
 
     def search(self, query, top_n=None):
         """执行搜索"""
@@ -79,66 +82,33 @@ class SearchEngine:
 
         return results
 
-    # def _boolean_search(self, query, language):
-    #     """布尔检索"""
-    #     tokens = tokenize(query, language)
-    #     if not tokens:
-    #         return []
-    #
-    #     result_docs = None
-    #     for term in tokens:
-    #         if term in self.inverted_index:
-    #             doc_ids = set(self.inverted_index[term].keys())
-    #             if result_docs is None:
-    #                 result_docs = doc_ids
-    #             else:
-    #                 result_docs &= doc_ids
-    #         else:
-    #             return []
-    #
-    #     return [int(doc_id) for doc_id in result_docs] if result_docs else []
 
     # def _boolean_search(self, query, language):
-    #     """
-    #     支持 AND/OR/NOT 的布尔检索（不含括号）
+    #     try:
+    #         tokens = self._parse_simple_boolean_query(query, language)
+    #     except ValueError as e:
+    #         return []  # 或抛出异常给前端显示错误信息
     #
-    #     参数:
-    #         query (str): 支持布尔语法的查询，例如：
-    #                     - "AI AND model"
-    #                     - "深度学习 OR 神经网络"
-    #                     - "transformer NOT bert"
-    #         language (str): 语言标识 ('en'/'zh')
-    #
-    #     返回:
-    #         List[int]: 匹配的文档ID列表（按文档ID排序）
-    #     """
-    #     # 1. 分词并提取布尔操作符
-    #     print(f"query:{query}")
-    #     tokens = self._parse_simple_boolean_query(query, language)
-    #     print(tokens)
     #     if not tokens:
     #         return []
     #
-    #     # 2. 初始化结果集和操作标记
     #     result_docs = None
-    #     current_operator = None  # 当前待处理的操作符 ('AND'/'OR'/'NOT')
+    #     current_operator = None
     #
-    #     # 3. 遍历处理每个词项
     #     for token in tokens:
     #         term = token['term']
-    #         operator = token['operator']
+    #         operator = token['operator']  # 当前词项的"左操作符"
     #
-    #         # 获取当前词项的文档集合
+    #         # 获取文档集合（带缓存优化）
     #         current_docs = set(self.inverted_index.get(term, {}).keys())
     #
-    #         # 处理第一个词项（无操作符）
+    #         # 初始情况
     #         if result_docs is None:
     #             result_docs = current_docs
     #             current_operator = operator
-    #             print(current_operator)
     #             continue
     #
-    #         # 应用当前操作符
+    #         # 应用操作符
     #         if current_operator == 'AND':
     #             result_docs &= current_docs
     #         elif current_operator == 'OR':
@@ -149,81 +119,42 @@ class SearchEngine:
     #         # 更新下一个操作符
     #         current_operator = operator
     #
+    #         # 短路优化
+    #         if not result_docs and current_operator == 'AND':
+    #             break
+    #
     #     return sorted(int(doc_id) for doc_id in result_docs) if result_docs else []
-
-    # def _parse_simple_boolean_query(self, query, language):
-    #     """
-    #     解析简单布尔查询（不含括号）
-    #     返回格式: [{'term': 'ai', 'operator': 'AND'}, ...]
-    #     """
-    #     import re
-    #
-    #     # 分割查询为词项和操作符
-    #     parts = re.split(r'\s+(AND|OR|NOT)\s+', query, flags=re.IGNORECASE)
-    #
-    #     tokens = []
-    #     operator = None
-    #
-    #     for i, item in enumerate(parts):
-    #         if i == 0:
-    #             # 第一个词项没有前置操作符
-    #             sub_tokens = tokenize(item, language)
-    #             for term in sub_tokens:
-    #                 tokens.append({'term': term, 'operator': None})
-    #         elif item.upper() in ['AND', 'OR', 'NOT']:
-    #             # 记录下一个词项的操作符
-    #             operator = item.upper()
-    #         else:
-    #             # 处理后续词项
-    #             sub_tokens = tokenize(item, language)
-    #             for term in sub_tokens:
-    #                 tokens.append({'term': term, 'operator': operator})
-    #             operator = None  # 重置操作符
-    #
-    #     return tokens
 
     def _boolean_search(self, query, language):
         try:
             tokens = self._parse_simple_boolean_query(query, language)
         except ValueError as e:
-            return []  # 或抛出异常给前端显示错误信息
+            return []
 
         if not tokens:
             return []
 
         result_docs = None
-        current_operator = None
 
         for token in tokens:
             term = token['term']
-            operator = token['operator']  # 当前词项的"左操作符"
+            operator = token['operator']
 
-            # 获取文档集合（带缓存优化）
             current_docs = set(self.inverted_index.get(term, {}).keys())
+            print(f"current_docs:{current_docs}")
 
-            # 初始情况
             if result_docs is None:
+
                 result_docs = current_docs
-                current_operator = operator
-                continue
-
-            # 应用操作符
-            if current_operator == 'AND':
-                result_docs &= current_docs
-            elif current_operator == 'OR':
-                result_docs |= current_docs
-            elif current_operator == 'NOT':
-                result_docs -= current_docs
-
-            # 更新下一个操作符
-            current_operator = operator
-
-            # 短路优化
-            if not result_docs and current_operator == 'AND':
-                break
+            else:
+                if operator == 'AND':
+                    result_docs &= current_docs
+                elif operator == 'OR':
+                    result_docs |= current_docs
+                elif operator == 'NOT':
+                    result_docs -= current_docs  # ✅ 正确：从现有结果中减去当前 term 的文档
 
         return sorted(int(doc_id) for doc_id in result_docs) if result_docs else []
-
 
     def _parse_simple_boolean_query(self, query, language):
         """
