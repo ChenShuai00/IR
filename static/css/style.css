@@ -1,0 +1,91 @@
+/* Main container adjustments */
+body {
+    padding-bottom: 2rem;
+}
+
+/* Search box enhancements */
+.search-box .input-group {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+/* Result cards styling */
+.card {
+    transition: transform 0.2s ease-in-out;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+}
+
+.card-title a {
+    text-decoration: none;
+    color: var(--bs-primary);
+}
+
+.card-title a:hover {
+    text-decoration: underline;
+}
+
+/* Dark mode adjustments */
+[data-bs-theme="dark"] .card {
+    background-color: var(--bs-dark-bg-subtle);
+}
+
+[data-bs-theme="dark"] .card-subtitle {
+    color: var(--bs-secondary-color) !important;
+}
+
+/* Query processing styling */
+#query-processing {
+    border-left: 4px solid var(--bs-info);
+}
+
+/* Loading spinner animation */
+@keyframes pulse {
+    0% { opacity: 0.6; }
+    50% { opacity: 1; }
+    100% { opacity: 0.6; }
+}
+
+#loading p {
+    animation: pulse 1.5s infinite;
+}
+
+/* Category badge styling */
+.category-badge {
+    font-size: 0.8rem;
+    padding: 0.25rem 0.5rem;
+    margin-left: 0.5rem;
+}
+
+[data-bs-theme="dark"] .category-badge {
+    background-color: var(--bs-info-bg-subtle) !important;
+    color: var(--bs-info-text) !important;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .search-box .input-group {
+        flex-direction: column;
+    }
+    
+    .search-box .input-group .form-control {
+        margin-bottom: 0.5rem;
+        width: 100%;
+    }
+    
+    .search-box .input-group .btn {
+        width: 100%;
+    }
+    
+    .nav-tabs .nav-item {
+        width: 100%;
+        text-align: center;
+    }
+}
+
+/* Tab content transitions */
+.tab-pane {
+    transition: opacity 0.3s ease;
+}

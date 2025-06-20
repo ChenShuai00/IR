@@ -1,0 +1,221 @@
+:root {
+  /* Light theme colors */
+  --primary: #4361ee;
+  --secondary: #3f37c9;
+  --accent: #4895ef;
+  --success: #4cc9f0;
+  --text: #2b2d42;
+  --text-light: #8d99ae;
+  --bg: #f8f9fa;
+  --card-bg: #ffffff;
+  --card-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  --border-radius: 0.5rem;
+  
+  /* Fonts */
+  --font-heading: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-body: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-zh: 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+}
+
+[data-bs-theme="dark"] {
+  /* Dark theme colors */
+  --primary: #4361ee;
+  --secondary: #3f37c9;
+  --accent: #4895ef;
+  --success: #4cc9f0;
+  --text: #f8f9fa;
+  --text-light: #adb5bd;
+  --bg: #212529;
+  --card-bg: #2b2d42;
+  --card-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* Base styles */
+body {
+  font-family: var(--font-body);
+  color: var(--text);
+  background-color: var(--bg);
+  line-height: 1.6;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Typography */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+/* Hero section */
+.hero {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+  color: white;
+  padding: 4rem 0;
+  margin-bottom: 2rem;
+  border-radius: 0 0 var(--border-radius) var(--border-radius);
+}
+
+.hero h1 {
+  font-size: 2.5rem;
+  font-weight: 700;
+}
+
+/* Search box */
+.search-container {
+  margin: -2rem auto 2rem auto;
+  position: relative;
+  z-index: 10;
+  padding: 1.5rem;
+  background: var(--card-bg);
+  border-radius: var(--border-radius);
+  box-shadow: var(--card-shadow);
+}
+
+.search-box {
+  width: 100%;
+}
+
+.search-box h1 {
+  color: var(--text) !important;
+  margin-bottom: 1.5rem !important;
+}
+
+/* Cards */
+.card {
+  background-color: var(--card-bg);
+  border: none;
+  border-radius: var(--border-radius);
+  box-shadow: var(--card-shadow);
+  transition: all 0.3s ease;
+  margin-bottom: 1.5rem;
+  overflow: hidden;
+  width: 100%;
+}
+
+/* Results container */
+#resultsTabContent {
+  padding: 1rem 0;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+}
+
+.card-body {
+  padding: 1.5rem;
+}
+
+.card-title {
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+}
+
+.card-subtitle {
+  color: var(--text-light);
+  font-size: 0.875rem;
+  margin-bottom: 1rem;
+}
+
+/* Language indicators */
+.lang-badge {
+  display: inline-block;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  margin-right: 0.5rem;
+}
+
+.lang-en {
+  background-color: rgba(67, 97, 238, 0.1);
+  color: var(--primary);
+}
+
+.lang-zh {
+  background-color: rgba(238, 67, 67, 0.1);
+  color: #ee4343;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.search-result {
+  animation: fadeIn 0.3s ease forwards;
+}
+
+/* Loading spinner */
+.loading-spinner {
+  width: 3rem;
+  height: 3rem;
+  border: 0.25rem solid rgba(67, 97, 238, 0.2);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 2rem auto;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Back to top button */
+.back-to-top {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  width: 3rem;
+  height: 3rem;
+  border-radius: 50%;
+  background-color: var(--primary);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s ease;
+  z-index: 1000;
+}
+
+.back-to-top.visible {
+  opacity: 1;
+  visibility: visible;
+}
+
+.back-to-top:hover {
+  background-color: var(--secondary);
+  transform: translateY(-3px);
+}
+
+/* Footer */
+.footer {
+  background-color: var(--card-bg);
+  padding: 2rem 0;
+  margin-top: auto;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .hero {
+    padding: 3rem 0;
+  }
+  
+  .hero h1 {
+    font-size: 2rem;
+  }
+  
+  .search-container {
+    transform: translateY(1rem);
+  }
+  
+  .card {
+    margin-bottom: 1rem;
+  }
+}

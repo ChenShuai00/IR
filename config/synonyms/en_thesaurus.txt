@@ -1,0 +1,10 @@
+ai:artificial intelligence, machine intelligence
+machine learning:ml, statistical learning
+deep learning:dl, neural networks
+neural network:nn, artificial neural network
+nlp:natural language processing, text analysis
+computer vision:cv, image recognition
+transformer:attention model, self-attention
+gpt:generative pre-trained transformer, openai model
+cnn:convolutional neural network, convnet
+rnn:recurrent neural network, sequential model

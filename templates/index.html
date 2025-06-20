@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI News Search - Multilingual</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="/static/css/style.css" rel="stylesheet">
+    <link href="/static/css/theme.css" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <i class="bi bi-search-heart me-2"></i>AI News Search
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="#">Home</a>
+                    </li>
+                </ul>
+                <div class="d-flex align-items-center">
+                    <div class="form-check form-switch me-3">
+                        <input class="form-check-input" type="checkbox" id="darkModeSwitch">
+                        <label class="form-check-label text-white" for="darkModeSwitch">
+                            <i class="bi bi-moon-stars"></i>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <div class="hero">
+        <div class="container text-center">
+            <h1>Discover AI News in Multiple Languages</h1>
+            <p class="lead">Search the latest AI research and news in Chinese and English</p>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Search Box -->
+        <div class="search-container">
+            <div class="search-box">
+                <h1 class="text-center mb-4 text-white">
+                    <i class="bi bi-search-heart me-2"></i>Search AI News
+                </h1>
+                <div class="input-group">
+                    <div class="input-group">
+                        <input type="text" class="form-control form-control-lg"
+                               id="search-input" placeholder="Search AI news...">
+                        <button class="btn btn-primary btn-lg" id="search-btn">
+                            <i class="bi bi-search"></i> Search
+                        </button>
+                    </div>
+                </div>
+
+                <div class="text-center mb-3">
+                    <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse" 
+                            data-bs-target="#advancedOptions">
+                        <i class="bi bi-gear"></i> Advanced Options
+                    </button>
+                </div>
+
+                <div class="collapse mb-3" id="advancedOptions">
+                    <div class="card card-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Language</label>
+                                <select class="form-select" id="language-select">
+                                    <option value="all">All Languages</option>
+                                    <option value="zh">Chinese Only</option>
+                                    <option value="en">English Only</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Sort By</label>
+                                <select class="form-select" id="sort-select">
+                                    <option value="relevance">Relevance</option>
+                                    <option value="date">Date</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="query-processing" class="alert alert-info mb-3 d-none">
+                    <div>
+                        <span>Original query: <strong id="original-query"></strong></span>
+                    </div>
+                    <div id="corrected-section" class="d-none">
+                        <span>Corrected to: <strong id="corrected-query" class="text-success"></strong></span>
+                    </div>
+                    <div id="expanded-section" class="d-none">
+                        <span>Expanded to: <strong id="expanded-query" class="text-primary"></strong></span>
+                    </div>
+                    <button id="revert-btn" class="btn btn-sm btn-outline-secondary mt-2 d-none">
+                        <i class="bi bi-arrow-counterclockwise"></i> Use original query
+                    </button>
+                </div>
+
+                <div id="loading" class="text-center my-4 d-none">
+                    <div class="loading-spinner"></div>
+                    <p class="mt-2">Searching...</p>
+                </div>
+
+                <div id="stats" class="mb-3"></div>
+            </div>
+        </div>
+
+        <!-- Results Section -->
+        <div class="card shadow">
+            <div class="card-header">
+                <ul class="nav nav-tabs card-header-tabs" id="resultsTab" role="tablist">
+            
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="all-tab" data-bs-toggle="tab" 
+                                data-bs-target="#all-results" type="button">All Results</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="zh-tab" data-bs-toggle="tab" 
+                                data-bs-target="#zh-results" type="button">Chinese</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="en-tab" data-bs-toggle="tab" 
+                                data-bs-target="#en-results" type="button">English</button>
+                    </li>
+                </ul>
+            </div>
+            <div class="card-body">
+                <div class="tab-content" id="resultsTabContent">
+        
+                    <div class="tab-pane fade show active" id="all-results" role="tabpanel">
+                        <div id="all-results-list" class="row row-cols-1 row-cols-md-2 g-4"></div>
+                        <nav aria-label="All results pagination" class="mt-4">
+                            <ul class="pagination justify-content-center" id="all-pagination"></ul>
+                        </nav>
+                    </div>
+                    <div class="tab-pane fade" id="zh-results" role="tabpanel">
+                        <div id="zh-results-list" class="row row-cols-1 row-cols-md-2 g-4"></div>
+                        <nav aria-label="Chinese results pagination" class="mt-4">
+                            <ul class="pagination justify-content-center" id="zh-pagination"></ul>
+                        </nav>
+                    </div>
+                    <div class="tab-pane fade" id="en-results" role="tabpanel">
+                        <div id="en-results-list" class="row row-cols-1 row-cols-md-2 g-4"></div>
+                        <nav aria-label="English results pagination" class="mt-4">
+                            <ul class="pagination justify-content-center" id="en-pagination"></ul>
+                        </nav>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // DOM elements
+            const searchInput = document.getElementById('search-input');
+            const searchBtn = document.getElementById('search-btn');
+            const loadingDiv = document.getElementById('loading');
+            const statsDiv = document.getElementById('stats');
+            const allResultsList = document.getElementById('all-results-list');
+            const zhResultsList = document.getElementById('zh-results-list');
+            const enResultsList = document.getElementById('en-results-list');
+            const allPagination = document.getElementById('all-pagination');
+            const zhPagination = document.getElementById('zh-pagination');
+            const enPagination = document.getElementById('en-pagination');
+            const queryProcessingDiv = document.getElementById('query-processing');
+            const originalQuerySpan = document.getElementById('original-query');
+            const correctedSection = document.getElementById('corrected-section');
+            const correctedQuerySpan = document.getElementById('corrected-query');
+            const expandedSection = document.getElementById('expanded-section');
+            const expandedQuerySpan = document.getElementById('expanded-query');
+            const revertBtn = document.getElementById('revert-btn');
+            const darkModeSwitch = document.getElementById('darkModeSwitch');
+
+            // Global variables for pagination
+            let currentQuery = '';
+            let currentPage = 1;
+            let totalPages = 1;
+            let perPage = 10;
+
+            // Dark mode toggle
+            darkModeSwitch.addEventListener('change', function() {
+                if (this.checked) {
+                    document.documentElement.setAttribute('data-bs-theme', 'dark');
+                } else {
+                    document.documentElement.setAttribute('data-bs-theme', 'light');
+                }
+            });
+
+            // Check URL for query parameter
+            const urlParams = new URLSearchParams(window.location.search);
+            const queryParam = urlParams.get('q');
+            if (queryParam) {
+                searchInput.value = queryParam;
+                performSearch(queryParam);
+            }
+
+            // Search button click event
+            searchBtn.addEventListener('click', function() {
+                const query = searchInput.value.trim();
+                if (query) {
+                    window.history.pushState({}, '', `?q=${encodeURIComponent(query)}`);
+                    performSearch(query);
+                }
+            });
+
+            // Enter key triggers search
+            searchInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    const query = searchInput.value.trim();
+                    if (query) {
+                        window.history.pushState({}, '', `?q=${encodeURIComponent(query)}`);
+                        performSearch(query);
+                    }
+                }
+            });
+
+            function performSearch(query, page = 1) {
+                currentQuery = query;
+                currentPage = page;
+                
+                // Show loading state
+                loadingDiv.classList.remove('d-none');
+                allResultsList.innerHTML = '';
+                zhResultsList.innerHTML = '';
+                enResultsList.innerHTML = '';
+                allPagination.innerHTML = '';
+                zhPagination.innerHTML = '';
+                enPagination.innerHTML = '';
+                statsDiv.innerHTML = '';
+                queryProcessingDiv.classList.add('d-none');
+                correctedSection.classList.add('d-none');
+                expandedSection.classList.add('d-none');
+                revertBtn.classList.add('d-none');
+
+                fetch(`/search?q=${encodeURIComponent(query)}&page=${page}&per_page=${perPage}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        loadingDiv.classList.add('d-none');
+
+                        if (data.error) {
+                            showError(data.error);
+                            return;
+                        }
+
+                        // Show query processing information
+                        queryProcessingDiv.classList.remove('d-none');
+                        originalQuerySpan.textContent = data.original_query || query;
+
+                        if (data.corrected_query && data.corrected_query !== data.original_query) {
+                            correctedSection.classList.remove('d-none');
+                            correctedQuerySpan.textContent = data.corrected_query;
+                        }
+
+                        if (data.expanded_query && data.expanded_query !== (data.corrected_query || data.original_query)) {
+                            expandedSection.classList.remove('d-none');
+                            expandedQuerySpan.textContent = data.expanded_query;
+                        }
+
+                        if (data.corrected_query || data.expanded_query) {
+                            revertBtn.classList.remove('d-none');
+                            revertBtn.onclick = function() {
+                                searchInput.value = data.original_query;
+                                performSearch(data.original_query);
+                            };
+                        }
+
+                        // Show stats
+                        statsDiv.innerHTML = `
+                            <div class="alert alert-info">
+                                Found ${data.count} results (${data.time.toFixed(3)} seconds)
+                                <br>
+                                Chinese: ${data.zh_count} | English: ${data.en_count}
+                                <br>
+                                Page ${data.page} of ${data.total_pages}
+                            </div>
+                        `;
+
+                        // Display results
+                        displayResults(data.results);
+                        
+                        // Update pagination
+                        updatePagination(data.page, data.total_pages);
+                    })
+                    .catch(error => {
+                        loadingDiv.classList.add('d-none');
+                        showError(error.message);
+                    });
+            }
+
+            function displayResults(results) {
+                // Clear previous results
+                allResultsList.innerHTML = '';
+                zhResultsList.innerHTML = '';
+                enResultsList.innerHTML = '';
+
+                // Display Chinese results
+                if (results.zh && results.zh.length > 0) {
+                    results.zh.forEach(result => {
+                        const item = createResultItem(result);
+                        zhResultsList.appendChild(item);
+                        allResultsList.appendChild(item.cloneNode(true));
+                    });
+                } else {
+                    zhResultsList.innerHTML = `
+                        <div class="col">
+                            <div class="alert alert-warning">No Chinese results found</div>
+                        </div>
+                    `;
+                }
+
+                // Display English results
+                if (results.en && results.en.length > 0) {
+                    results.en.forEach(result => {
+                        const item = createResultItem(result);
+                        enResultsList.appendChild(item);
+                        allResultsList.appendChild(item.cloneNode(true));
+                    });
+                } else {
+                    enResultsList.innerHTML = `
+                        <div class="col">
+                            <div class="alert alert-warning">No English results found</div>
+                        </div>
+                    `;
+                }
+            }
+
+            function createResultItem(result) {
+                const col = document.createElement('div');
+                col.className = 'col';
+
+                const card = document.createElement('div');
+                card.className = 'card h-100';
+
+                const cardBody = document.createElement('div');
+                cardBody.className = 'card-body';
+
+                const title = document.createElement('h5');
+                title.className = 'card-title';
+                title.innerHTML = `<a href="${result.url}" target="_blank">${result.title}</a>`;
+
+                const url = document.createElement('div');
+                url.className = 'card-subtitle mb-2 text-muted small';
+                url.textContent = result.url;
+
+                const snippet = document.createElement('p');
+                snippet.className = 'card-text';
+                snippet.textContent = result.snippet;
+
+                const footer = document.createElement('div');
+                footer.className = 'card-footer bg-transparent border-top-0';
+                footer.innerHTML = `
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="lang-badge ${result.language === 'zh' ? 'lang-zh' : 'lang-en'}">
+                            ${result.language === 'zh' ? '中文' : 'EN'}
+                        </span>
+                        <span class="category-badge badge rounded-pill bg-info text-dark" 
+                              title="Confidence: ${Math.round(result.category_confidence * 100)}%">
+                            ${result.category}
+                        </span>
+                    </div>
+                `;
+
+                cardBody.appendChild(title);
+                cardBody.appendChild(url);
+                cardBody.appendChild(snippet);
+                card.appendChild(cardBody);
+                card.appendChild(footer);
+                col.appendChild(card);
+
+                return col;
+            }
+
+            function showError(message) {
+                allResultsList.innerHTML = `
+                    <div class="col">
+                        <div class="alert alert-danger">Error: ${message}</div>
+                    </div>
+                `;
+            }
+
+            function updatePagination(currentPage, totalPages) {
+                // Create pagination for all results
+                createPaginationControls(allPagination, currentPage, totalPages);
+                createPaginationControls(zhPagination, currentPage, totalPages);
+                createPaginationControls(enPagination, currentPage, totalPages);
+            }
+
+            function createPaginationControls(paginationElement, currentPage, totalPages) {
+                paginationElement.innerHTML = '';
+                
+                // Previous button
+                const prevLi = document.createElement('li');
+                prevLi.className = `page-item ${currentPage === 1 ? 'disabled' : ''}`;
+                const prevLink = document.createElement('a');
+                prevLink.className = 'page-link';
+                prevLink.href = '#';
+                prevLink.innerHTML = '&laquo;';
+                prevLink.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    if (currentPage > 1) {
+                        performSearch(currentQuery, currentPage - 1);
+                    }
+                });
+                prevLi.appendChild(prevLink);
+                paginationElement.appendChild(prevLi);
+
+                // Page numbers
+                const startPage = Math.max(1, currentPage - 2);
+                const endPage = Math.min(totalPages, currentPage + 2);
+
+                for (let i = startPage; i <= endPage; i++) {
+                    const pageLi = document.createElement('li');
+                    pageLi.className = `page-item ${i === currentPage ? 'active' : ''}`;
+                    const pageLink = document.createElement('a');
+                    pageLink.className = 'page-link';
+                    pageLink.href = '#';
+                    pageLink.textContent = i;
+                    pageLink.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        performSearch(currentQuery, i);
+                    });
+                    pageLi.appendChild(pageLink);
+                    paginationElement.appendChild(pageLi);
+                }
+
+                // Next button
+                const nextLi = document.createElement('li');
+                nextLi.className = `page-item ${currentPage === totalPages ? 'disabled' : ''}`;
+                const nextLink = document.createElement('a');
+                nextLink.className = 'page-link';
+                nextLink.href = '#';
+                nextLink.innerHTML = '&raquo;';
+                nextLink.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    if (currentPage < totalPages) {
+                        performSearch(currentQuery, currentPage + 1);
+                    }
+                });
+                nextLi.appendChild(nextLink);
+                paginationElement.appendChild(nextLi);
+            }
+        });
+    </script>
+
+    <!-- Back to Top Button -->
+    <button class="back-to-top" id="backToTop">
+        <i class="bi bi-arrow-up"></i>
+    </button>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container text-center">
+            <p class="mb-0">© 2025 AI News Search - Multilingual Search Engine</p>
+            <p class="text-muted small">Powered by Flask and Bootstrap</p>
+        </div>
+    </footer>
+
+    <script>
+        // Back to top button functionality
+        const backToTopBtn = document.getElementById('backToTop');
+        window.addEventListener('scroll', () => {
+            if (window.pageYOffset > 300) {
+                backToTopBtn.classList.add('visible');
+            } else {
+                backToTopBtn.classList.remove('visible');
+            }
+        });
+
+        backToTopBtn.addEventListener('click', () => {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        });
+
+        
+    </script>
+</body>
+</html>
