@@ -49,8 +49,7 @@ class SearchEngine:
         # 同义词扩展
         expanded = self.synonym_expander.expand(corrected)
         # expanded if expanded != corrected else corrected
-
-        return corrected
+        return query
 
     def search(self, query, top_n=None):
         """执行搜索"""
@@ -65,8 +64,7 @@ class SearchEngine:
         doc_ids = self._boolean_search(processed_query, language)
 
         # 相关性排序
-        ranked_docs = self._rank_documents(processed_query, doc_ids, language)
-
+        ranked_docs,scores = self._rank_documents(processed_query, doc_ids, language)
         # 准备结果
         results = []
         for doc_id in ranked_docs[:top_n]:
@@ -76,54 +74,12 @@ class SearchEngine:
                 'url': doc['url'],
                 'snippet': self._generate_snippet(doc['content'], processed_query, language),
                 'language': doc.get('language', 'en'),
-                'score': doc.get('score', 0),
+                'score': scores.get(doc_id, 0),
                 'category': doc.get('topic_name', '未分类'),
+
             })
 
         return results
-
-
-    # def _boolean_search(self, query, language):
-    #     try:
-    #         tokens = self._parse_simple_boolean_query(query, language)
-    #     except ValueError as e:
-    #         return []  # 或抛出异常给前端显示错误信息
-    #
-    #     if not tokens:
-    #         return []
-    #
-    #     result_docs = None
-    #     current_operator = None
-    #
-    #     for token in tokens:
-    #         term = token['term']
-    #         operator = token['operator']  # 当前词项的"左操作符"
-    #
-    #         # 获取文档集合（带缓存优化）
-    #         current_docs = set(self.inverted_index.get(term, {}).keys())
-    #
-    #         # 初始情况
-    #         if result_docs is None:
-    #             result_docs = current_docs
-    #             current_operator = operator
-    #             continue
-    #
-    #         # 应用操作符
-    #         if current_operator == 'AND':
-    #             result_docs &= current_docs
-    #         elif current_operator == 'OR':
-    #             result_docs |= current_docs
-    #         elif current_operator == 'NOT':
-    #             result_docs -= current_docs
-    #
-    #         # 更新下一个操作符
-    #         current_operator = operator
-    #
-    #         # 短路优化
-    #         if not result_docs and current_operator == 'AND':
-    #             break
-    #
-    #     return sorted(int(doc_id) for doc_id in result_docs) if result_docs else []
 
     def _boolean_search(self, query, language):
         try:
@@ -141,8 +97,6 @@ class SearchEngine:
             operator = token['operator']
 
             current_docs = set(self.inverted_index.get(term, {}).keys())
-            print(f"current_docs:{current_docs}")
-
             if result_docs is None:
 
                 result_docs = current_docs
@@ -165,8 +119,6 @@ class SearchEngine:
 
         # 使用正则分割查询
         parts = re.split(r'\s+(AND|OR|NOT)\s+', query, flags=re.IGNORECASE)
-
-        print(f"parts:{parts}")
 
         # 检查第一个元素是否是操作符（非法情况）
         if len(parts) > 0 and parts[0].upper() in ['AND', 'OR', 'NOT']:
@@ -193,15 +145,13 @@ class SearchEngine:
         if tokens:
             tokens[0]['operator'] = None
 
-        print(f"tokens:{tokens}")
-
         return tokens
 
     def _rank_documents(self, query, doc_ids, language):
         """基于BM25的相关性排序"""
         tokens = tokenize(query, language)
         if not tokens or not doc_ids:
-            return []
+            return [], {}
 
         # BM25参数
         k1 = 1.5
@@ -229,9 +179,8 @@ class SearchEngine:
                 numerator = tf * (k1 + 1)
                 denominator = tf + k1 * (1 - b + b * doc_length / self.avg_doc_length)
                 scores[doc_id] += idf * numerator / denominator
-
         # 按分数排序
-        return sorted(scores.keys(), key=lambda x: scores[x], reverse=True)
+        return sorted(scores.keys(), key=lambda x: scores[x], reverse=True), scores
 
     def _generate_snippet(self, content, query, language):
         """生成摘要片段"""

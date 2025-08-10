@@ -83,31 +83,27 @@ class SpellChecker:
             return []
         suggestions = []
         # 1. 拼音相似性检查
-        try:
-            from pypinyin import pinyin, Style
-            # 获取输入词的拼音
-            word_pinyin = [item[0] for item in pinyin(word, style=Style.NORMAL)]
-
-            for vocab_word in self.vocab['zh']:
-                # 跳过长度差异大的词
-                if abs(len(vocab_word) - len(word)) > 1:
-                    continue
-
-                # 获取候选词拼音
-                vocab_pinyin = [item[0] for item in pinyin(vocab_word, style=Style.NORMAL)]
-
-                # 简单拼音相似度计算
-                if word_pinyin == vocab_pinyin:
-                    # 拼音完全相同但字形不同（同音字）
-                    suggestions.append((vocab_word, 1))
-                elif len(word_pinyin) == len(vocab_pinyin):
-                    # 拼音长度相同，计算相同拼音的数量
-                    same_pinyin = sum(1 for w, v in zip(word_pinyin, vocab_pinyin) if w == v)
-                    similarity = same_pinyin / len(word_pinyin)
-                    if similarity >= 0.5:  # 至少50%拼音相同
-                        suggestions.append((vocab_word, 1 - similarity))
-        except ImportError:
-            pass
+       
+        from pypinyin import pinyin, Style
+        # 获取输入词的拼音
+        word_pinyin = [item[0] for item in pinyin(word, style=Style.NORMAL)]
+        for vocab_word in self.vocab['zh']:
+            # 跳过长度差异大的词
+            if abs(len(vocab_word) - len(word)) > 1:
+                continue
+            # 获取候选词拼音
+            vocab_pinyin = [item[0] for item in pinyin(vocab_word, style=Style.NORMAL)]
+            # 简单拼音相似度计算
+            if word_pinyin == vocab_pinyin:
+                # 拼音完全相同但字形不同（同音字）
+                suggestions.append((vocab_word, 1))
+            elif len(word_pinyin) == len(vocab_pinyin):
+                # 拼音长度相同，计算相同拼音的数量
+                same_pinyin = sum(1 for w, v in zip(word_pinyin, vocab_pinyin) if w == v)
+                similarity = same_pinyin / len(word_pinyin)
+                if similarity >= 0.5:  # 至少50%拼音相同
+                    suggestions.append((vocab_word, 1 - similarity))
+        
         # 2. 简单字形相似性检查
         if not suggestions:
             for vocab_word in self.vocab['zh']:

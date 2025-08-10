@@ -5,64 +5,6 @@ from utils.language import detect_language
 import jieba
 
 
-# class SynonymExpander:
-#     def __init__(self):
-#         # 加载同义词词典
-#         self.thesaurus = {
-#             'en': self._load_thesaurus(SEARCH_CONFIG['synonyms']['en']),
-#             'zh': self._load_thesaurus(SEARCH_CONFIG['synonyms']['zh'])
-#         }
-#
-#         # 初始化中文分词
-#         jieba.initialize()
-#
-#     def _load_thesaurus(self, filepath):
-#         """加载同义词词典"""
-#         thesaurus = defaultdict(list)
-#         if not Path(filepath).exists():
-#             return thesaurus
-#
-#         with open(filepath, 'r', encoding='utf-8') as f:
-#             for line in f:
-#                 if ':' in line:
-#                     word, synonyms = line.strip().split(':', 1)
-#                     thesaurus[word] = [s.strip() for s in synonyms.split(',')]
-#         return thesaurus
-#
-#     def expand(self, query):
-#         """扩展查询词"""
-#         language = detect_language(query)
-#         if language == 'zh':
-#             return self._expand_chinese(query)
-#         return self._expand_english(query)
-#
-#     def _expand_english(self, query):
-#         """扩展英文查询"""
-#         words = query.split()
-#         expanded = []
-#
-#         for word in words:
-#             expanded.append(word)
-#             if word.lower() in self.thesaurus['en']:
-#                 expanded.extend(self.thesaurus['en'][word.lower()][:2])  # 添加前2个同义词
-#
-#         print(f"en:{expanded}")
-#         return ' '.join(expanded)
-#
-#     def _expand_chinese(self, query):
-#         """扩展中文查询"""
-#         words = list(jieba.cut(query))
-#         expanded = []
-#
-#         for word in words:
-#             expanded.append(word)
-#             if word in self.thesaurus['zh']:
-#                 expanded.extend(self.thesaurus['zh'][word][:2])  # 添加前2个同义词
-#
-#         print(f"zh:{expanded}")
-#         return ''.join(expanded)
-
-
 class SynonymExpander:
     def __init__(self):
         # 加载同义词词典

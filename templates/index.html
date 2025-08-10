@@ -66,14 +66,28 @@
                             <i class="bi bi-search"></i> Search
                         </button>
                     </div>
+                    
+                    <div id="spell-suggestions" class="mt-2 d-none">
+                        <div class="d-flex align-items-center mb-1">
+                            <small class="text-muted me-2">拼写纠正:</small>
+                        </div>
+                        <div class="suggestions-container d-flex flex-wrap gap-2"></div>
+                    </div>
+                    
+                    <div id="synonym-suggestions" class="mt-2 d-none">
+                        <div class="d-flex align-items-center mb-1">
+                            <small class="text-muted me-2">同义词建议:</small>
+                        </div>
+                        <div class="synonyms-container d-flex flex-wrap gap-2"></div>
+                    </div>
                 </div>
 
-                <div class="text-center mb-3">
+                <!-- <div class="text-center mb-3">
                     <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse" 
                             data-bs-target="#advancedOptions">
                         <i class="bi bi-gear"></i> Advanced Options
                     </button>
-                </div>
+                </div> -->
 
                 <div class="collapse mb-3" id="advancedOptions">
                     <div class="card card-body">
@@ -97,7 +111,7 @@
                     </div>
                 </div>
 
-                <div id="query-processing" class="alert alert-info mb-3 d-none">
+                <div id="query-processing" class="alert alert-info mb-3 mt-3 d-none">
                     <div>
                         <span>Original query: <strong id="original-query"></strong></span>
                     </div>
@@ -371,6 +385,9 @@
                         <span class="lang-badge ${result.language === 'zh' ? 'lang-zh' : 'lang-en'}">
                             ${result.language === 'zh' ? '中文' : 'EN'}
                         </span>
+                        <span class="category-badge badge rounded-pill bg-info text-dark">
+                            BM25 scores: ${result.score}
+                        </span>
                         <span class="category-badge badge rounded-pill bg-info text-dark" 
                               title="Confidence: ${Math.round(result.category_confidence * 100)}%">
                             ${result.category}
@@ -491,7 +508,170 @@
             });
         });
 
-        
+        // 拼写建议功能
+        const searchInput = document.getElementById('search-input');
+        const suggestionsContainer = document.querySelector('.suggestions-container');
+        const spellSuggestions = document.getElementById('spell-suggestions');
+        let suggestionTimer = null;
+
+        console.log('拼写建议脚本已加载'); // 调试信息
+
+        // 输入事件处理
+        searchInput.addEventListener('input', function() {
+            console.log('检测到输入事件'); // 调试信息
+            clearTimeout(suggestionTimer);
+            const query = this.value.trim();
+            
+            if (query.length > 0) {
+                console.log('准备获取拼写建议:', query); // 调试信息
+                suggestionTimer = setTimeout(() => {
+                    fetchSpellSuggestions(query);
+                }, 300); // 300ms延迟
+            } else {
+                spellSuggestions.classList.add('d-none');
+            }
+        });
+
+        // 获取拼写建议
+        function fetchSpellSuggestions(query) {
+            console.log('正在获取拼写建议:', query); // 调试信息
+            fetch(`/spellcheck/suggest?q=${encodeURIComponent(query)}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('收到拼写建议响应:', data); // 调试信息
+                    if (data.suggestions && data.suggestions.length > 0) {
+                        console.log('显示拼写建议:', data.suggestions); // 调试信息
+                        displaySuggestions(data.suggestions);
+                    } else {
+                        console.log('没有拼写建议'); // 调试信息
+                        spellSuggestions.classList.add('d-none');
+                    }
+                })
+                .catch(error => {
+                    console.error('获取拼写建议失败:', error); // 调试信息
+                    spellSuggestions.classList.add('d-none');
+                });
+        }
+
+        // 显示建议
+        function displaySuggestions(suggestions) {
+            suggestionsContainer.innerHTML = '';
+            suggestions.forEach(suggestion => {
+                const badge = document.createElement('span');
+                badge.className = 'badge bg-light text-dark cursor-pointer suggestion-badge';
+                badge.textContent = suggestion;
+                badge.addEventListener('click', () => {
+                    searchInput.value = suggestion;
+                    spellSuggestions.classList.add('d-none');
+                });
+                suggestionsContainer.appendChild(badge);
+            });
+            spellSuggestions.classList.remove('d-none');
+        }
+
+        // 点击外部隐藏建议
+        document.addEventListener('click', function(e) {
+            if (!spellSuggestions.contains(e.target) && e.target !== searchInput) {
+                spellSuggestions.classList.add('d-none');
+            }
+            if (!synonymSuggestions.contains(e.target) && e.target !== searchInput) {
+                synonymSuggestions.classList.add('d-none');
+            }
+        });
+
+        // 同义词建议功能
+        const synonymSuggestions = document.getElementById('synonym-suggestions');
+        const synonymsContainer = document.querySelector('.synonyms-container');
+        let synonymTimer = null;
+
+        // 输入事件处理 - 同义词建议
+        searchInput.addEventListener('input', function() {
+            clearTimeout(synonymTimer);
+            const query = this.value.trim();
+            
+            if (query.length > 0) {
+                synonymTimer = setTimeout(() => {
+                    fetchSynonymSuggestions(query);
+                }, 300); // 300ms延迟
+            } else {
+                synonymSuggestions.classList.add('d-none');
+            }
+        });
+
+        // 获取同义词建议
+        function fetchSynonymSuggestions(query) {
+            fetch(`/synonyms/suggest?q=${encodeURIComponent(query)}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.synonyms && data.synonyms.length > 0) {
+                        displaySynonymSuggestions(data.synonyms);
+                    } else {
+                        synonymSuggestions.classList.add('d-none');
+                    }
+                })
+                .catch(error => {
+                    console.error('获取同义词建议失败:', error);
+                    synonymSuggestions.classList.add('d-none');
+                });
+        }
+
+        // 显示同义词建议
+        function displaySynonymSuggestions(synonyms) {
+            synonymsContainer.innerHTML = '';
+            synonyms.forEach(item => {
+                const wordGroup = document.createElement('div');
+                wordGroup.className = 'd-flex flex-column mb-2';
+
+                const wordLabel = document.createElement('small');
+                wordLabel.className = 'text-muted mb-1';
+                wordLabel.textContent = `"${item.word}" 的同义词:`;
+                wordGroup.appendChild(wordLabel);
+
+                const synonymBadges = document.createElement('div');
+                synonymBadges.className = 'd-flex flex-wrap gap-2';
+
+                item.synonyms.forEach(synonym => {
+                    const badge = document.createElement('span');
+                    badge.className = 'badge bg-light text-dark cursor-pointer synonym-badge';
+                    badge.textContent = synonym;
+                    badge.addEventListener('click', () => {
+                        // 替换当前词为同义词
+                        const currentValue = searchInput.value;
+                        const newValue = currentValue.replace(item.word, synonym);
+                        searchInput.value = newValue;
+                        synonymSuggestions.classList.add('d-none');
+                    });
+                    synonymBadges.appendChild(badge);
+                });
+
+                wordGroup.appendChild(synonymBadges);
+                synonymsContainer.appendChild(wordGroup);
+            });
+            synonymSuggestions.classList.remove('d-none');
+        }
     </script>
+
+    <style>
+        .suggestion-badge {
+            transition: all 0.2s;
+        }
+        .suggestion-badge:hover {
+            background-color: #e9ecef !important;
+            transform: translateY(-1px);
+        }
+        .cursor-pointer {
+            cursor: pointer;
+        }
+    </style>
 </body>
 </html>

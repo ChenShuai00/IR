@@ -1,10 +1,17 @@
 from flask import Flask, render_template, request, jsonify
+import jieba
 from search.core import SearchEngine
+from search import SpellChecker
 from config.settings import WEB_CONFIG
+from utils.language import detect_language
 import time
 from pathlib import Path
 from chat.rag import conv_manager, get_rag_response
+from chat.agent import get_agent_response
+from chat.ReAct.Agent import ReAct, DeepSeekChat
 import uuid
+
+react = ReAct(DeepSeekChat())
 
 app = Flask(__name__,
             template_folder=WEB_CONFIG['template_dir'],
@@ -59,6 +66,38 @@ def chat_api():
             }
         }), 500
 
+@app.route('/api/agent', methods=['POST'])
+def agent_api():
+    data = request.get_json()
+    session_id = data.get('session_id', str(uuid.uuid4()))
+    message = data.get('message', '').strip()
+    
+    if not message:
+        return jsonify({'error': 'Message cannot be empty'}), 400
+    
+    try:
+        # Get conversation history
+        history = conv_manager.get_history(session_id)
+        
+        # Get agent response
+        response = get_agent_response(react, text=message, history=history)
+
+        # Add messages to history
+        conv_manager.add_message(session_id, "user", message)
+        conv_manager.add_message(session_id, "assistant", response)
+        
+        return jsonify({
+            'answer': response,
+            'session_id': session_id
+        })
+    except Exception as e:
+        return jsonify({
+            'error': {
+                'message': str(e),
+                'type': type(e).__name__
+            }
+        }), 500
+
 
 @app.route('/search')
 def search():
@@ -99,6 +138,71 @@ def search():
         'per_page': per_page,
         'total_pages': max(1, (len(results) + per_page - 1) // per_page)
     })
+
+@app.route('/spellcheck/suggest')
+def spell_suggest():
+    spell_checker = SpellChecker()
+    if not search_engine:
+        return jsonify({'error': 'Search engine not available'}), 500
+
+    query = request.args.get('q', '').strip()
+    if not query:
+        return jsonify({'suggestions': []})
+
+    try:
+        # 获取拼写建议
+        suggestions = spell_checker._get_english_suggestions(query) if detect_language(query) == 'en' \
+                     else spell_checker._get_chinese_suggestions(query)
+
+        return jsonify({
+            'suggestions': suggestions[:3]  # 返回最多3个建议
+        })
+    except Exception as e:
+        return jsonify({
+            'error': str(e),
+            'suggestions': []
+        })
+
+@app.route('/synonyms/suggest')
+def synonym_suggest():
+    from search.synonym_expander import SynonymExpander
+    synonym_expander = SynonymExpander()
+    if not search_engine:
+        return jsonify({'error': 'Search engine not available'}), 500
+
+    query = request.args.get('q', '').strip()
+    if not query:
+        return jsonify({'synonyms': []})
+
+    try:
+        # 获取同义词建议
+        language = detect_language(query)
+        if language == 'zh':
+            words = [w for w in jieba.cut(query) if w.strip()]
+        else:
+            words = query.split()
+
+        synonyms = []
+        for word in words:
+            if language == 'zh':
+                word_synonyms = synonym_expander.thesaurus['zh'].get(word, [])[:3]
+            else:
+                word_synonyms = synonym_expander.thesaurus['en'].get(word.lower(), [])[:3]
+            
+            if word_synonyms:
+                synonyms.append({
+                    'word': word,
+                    'synonyms': word_synonyms
+                })
+
+        return jsonify({
+            'synonyms': synonyms
+        })
+    except Exception as e:
+        return jsonify({
+            'error': str(e),
+            'synonyms': []
+        })
 
 if __name__ == '__main__':
     app.run(

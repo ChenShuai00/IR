@@ -122,6 +122,9 @@
             <button class="btn btn-primary" id="send-button">
                 <i class="bi bi-send"></i> Send
             </button>
+            <button class="btn btn-outline-primary" id="agent-button">
+                <i class="bi bi-robot"></i> Agent
+            </button>
         </div>
     </div>
 
@@ -149,13 +152,25 @@
                 }
             });
 
+            let agentMode = false;
+            
+            // Toggle agent mode
+            document.getElementById('agent-button').addEventListener('click', function() {
+                agentMode = !agentMode;
+                this.classList.toggle('btn-outline-primary');
+                this.classList.toggle('btn-primary');
+                messageInput.placeholder = agentMode ? 
+                    "Ask agent (multi-turn mode)..." : 
+                    "Type your message...";
+            });
+
             // Send message
             function sendMessage() {
                 const message = messageInput.value.trim();
                 if (!message) return;
 
                 // Add user message to chat
-                addMessage('user', message);
+                addMessage('user', message + (agentMode ? ' (Agent)' : ''));
                 messageInput.value = '';
 
                 // Show loading indicator
@@ -173,7 +188,8 @@
                 chatHistory.scrollTop = chatHistory.scrollHeight;
 
                 // Send to server
-                fetch('/api/chat', {
+                const apiEndpoint = agentMode ? '/api/agent' : '/api/chat';
+                fetch(apiEndpoint, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
