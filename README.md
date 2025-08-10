@@ -5,7 +5,7 @@ A Flask-based web application for multilingual (Chinese/English) information ret
 ## Features
 
 - **Multilingual Search**: Supports both Chinese and English content
-- **Chat Interface**: RAG (Retrieval-Augmented Generation) powered chat
+- **Chat Interface**: RAG (Retrieval-Augmented Generation) and React(Agent) powered chat
 - **Topic Modeling**: LDA analysis for document clustering
 - **Web Interface**: User-friendly web UI with search and chat functionality
 - **Advanced NLP**: Utilizes LangChain and HuggingFace models
@@ -40,7 +40,7 @@ The web interface will be available at `http://localhost:5000`
 
 ```
 ├── app.py                - Main application entry point
-├── chat/                 - RAG chat implementation
+├── chat/                 - RAG/agnet chat implementation
 ├── config/               - Configuration files
 │   ├── spellcheck/       - Dictionary files
 │   ├── stopwords/        - Stopword lists
@@ -68,8 +68,30 @@ Key dependencies include:
 - Matplotlib/Seaborn (visualization)
 
 ## Screenshots
-![Search Interface](./screenshot1.jpg)
-![LDA Visualization](./lda_evaluation.png)
+
+### 主页
+
+![Search Interface](./image/screenshot1.jpg)
+
+### 搜索时的拼写纠正和同义词替换
+
+![](./image/1.jpg)
+
+### 搜索结果
+
+![](./image/2.jpg)
+
+### LDA主题建模结果
+
+![LDA Visualization](./image/lda_evaluation.png)
+
+### RAG结果
+
+![](./image/3.jpg)
+
+### Agent(利用联网搜索来检索回答)
+
+![](./image/4.jpg)
 
 
 ## License
